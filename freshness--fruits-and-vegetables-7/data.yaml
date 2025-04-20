@@ -1,0 +1,28 @@
+names:
+- fresh apple
+- fresh banana
+- fresh bellpepper
+- fresh carrot
+- fresh cucumber
+- fresh mango
+- fresh orange
+- fresh potato
+- rotten apple
+- rotten banana
+- rotten carrot
+- rotten cucumber
+- rotten mango
+- rotten orange
+- rotten potato
+- rotten tomato
+- rottenbellpepper
+nc: 17
+roboflow:
+  license: CC BY 4.0
+  project: freshness-fruits-and-vegetables
+  url: https://universe.roboflow.com/college-74jj5/freshness-fruits-and-vegetables/dataset/7
+  version: 7
+  workspace: college-74jj5
+test: ../test/images
+train: ../train/images
+val: ../valid/images
