@@ -1,3 +1,5 @@
+import os
+import requests
 from flask import Flask, Response, request, jsonify
 from ultralytics import YOLO
 import cv2
@@ -5,8 +7,19 @@ import numpy as np
 
 app = Flask(__name__)
 
+# Ensure the model file exists
+MODEL_PATH = "best.pt"
+MODEL_URL = "https://drive.google.com/uc?export=download&id=1DMf-BRIuR8zozfEIzLPM6aAwSAfoDa4D"  # Replace with your direct download link
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model...")
+    response = requests.get(MODEL_URL)
+    with open(MODEL_PATH, "wb") as f:
+        f.write(response.content)
+    print("Model downloaded successfully!")
+
 # Load the YOLO model
-model = YOLO(r"FreshnessDetection\YOLOv8_fruits_veg\weights\best.pt")
+model = YOLO(MODEL_PATH)
 
 # Live video capture endpoint
 @app.route('/live', methods=['GET'])
