@@ -29,14 +29,13 @@ def index():
     return jsonify({
         "message": "Welcome to the FreshTrack API!",
         "endpoints": {
-            "live": "/live (GET) - Stream live video with YOLO detections",
+            "live": "/live (GET or POST) - Stream live video with YOLO detections",
             "predict": "/predict (POST) - Upload an image for predictions"
         }
     })
 
 @app.route('/live', methods=['GET', 'POST'])
 def live():
-    logging.debug(f"Request method: {request.method}")
     def generate_frames(video_stream):
         while True:
             ret, frame = video_stream.read()
@@ -58,11 +57,10 @@ def live():
         video_stream.release()
 
     if request.method == 'GET':
-        logging.debug("Accessing webcam...")
-        video_stream = cv2.VideoCapture(0)
+        # For GET requests, use a sample video file or webcam
+        video_stream = cv2.VideoCapture(0)  # Replace with 'sample_video.mp4' for testing
         if not video_stream.isOpened():
-            logging.error("Failed to access webcam.")
-            return "Failed to access webcam", 500
+            return "Failed to access webcam or video file", 500
         return Response(generate_frames(video_stream), mimetype='multipart/x-mixed-replace; boundary=frame')
 
     if request.method == 'POST':
@@ -97,4 +95,5 @@ def predict():
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))  # Use PORT from environment or default to 5000
+    app.run(host='0.0.0.0', port=port)
