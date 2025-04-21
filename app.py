@@ -21,7 +21,16 @@ if not os.path.exists(MODEL_PATH):
 # Load the YOLO model
 model = YOLO(MODEL_PATH)
 
-# Live video capture endpoint
+@app.route('/')
+def index():
+    return jsonify({
+        "message": "Welcome to the FreshTrack API!",
+        "endpoints": {
+            "live": "/live (GET) - Stream live video with YOLO detections",
+            "predict": "/predict (POST) - Upload an image for predictions"
+        }
+    })
+
 @app.route('/live', methods=['GET'])
 def live():
     def generate_frames():
