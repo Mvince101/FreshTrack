@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, Response, request, jsonify
 from ultralytics import YOLO
 import cv2
 import numpy as np
@@ -7,6 +7,32 @@ app = Flask(__name__)
 
 # Load the YOLO model
 model = YOLO(r"FreshnessDetection\YOLOv8_fruits_veg\weights\best.pt")
+
+# Live video capture endpoint
+@app.route('/live', methods=['GET'])
+def live():
+    def generate_frames():
+        cap = cv2.VideoCapture(0)  # Open webcam (use 0 for default camera)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            # Run the model on the frame
+            results = model(frame)
+            annotated_frame = results[0].plot()  # Annotate the frame with detections
+
+            # Encode the frame as JPEG
+            _, buffer = cv2.imencode('.jpg', annotated_frame)
+            frame_bytes = buffer.tobytes()
+
+            # Yield the frame as part of an HTTP response
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+        cap.release()
+
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/predict', methods=['POST'])
 def predict():
