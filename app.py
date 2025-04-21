@@ -4,6 +4,9 @@ from flask import Flask, Response, request, jsonify
 from ultralytics import YOLO
 import cv2
 import numpy as np
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -31,12 +34,12 @@ def index():
         }
     })
 
-@app.route('/live', methods=['GET'])
+@app.route('/live', methods=['GET', 'POST'])
 def live():
-    def generate_frames():
-        cap = cv2.VideoCapture(0)  # Open webcam (use 0 for default camera)
+    logging.debug(f"Request method: {request.method}")
+    def generate_frames(video_stream):
         while True:
-            ret, frame = cap.read()
+            ret, frame = video_stream.read()
             if not ret:
                 break
 
@@ -52,9 +55,24 @@ def live():
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-        cap.release()
+        video_stream.release()
 
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    if request.method == 'GET':
+        logging.debug("Accessing webcam...")
+        video_stream = cv2.VideoCapture(0)
+        if not video_stream.isOpened():
+            logging.error("Failed to access webcam.")
+            return "Failed to access webcam", 500
+        return Response(generate_frames(video_stream), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    if request.method == 'POST':
+        # For POST requests, process an uploaded video file
+        if 'video' not in request.files:
+            return "No video file uploaded", 400
+
+        video_file = request.files['video']
+        video_stream = cv2.VideoCapture(video_file.stream)
+        return Response(generate_frames(video_stream), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/predict', methods=['POST'])
 def predict():
